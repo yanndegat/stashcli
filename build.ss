@@ -7,7 +7,7 @@
 
 ;; the library module build specification
 (def lib-build-spec
-  '("utils.ss" "project.ss" "inbox.ss"))
+  '("utils.ss" "project.ss" "repository.ss" "inbox.ss"))
 
 (def (bin-build-spec)
   (if (static?)

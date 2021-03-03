@@ -4,19 +4,23 @@
         :std/getopt
         :std/ref
         :colorstring/colorstring
-        :stash/project
         :stash/inbox
+        :stash/project
+        :stash/repository
         :stash/utils)
 
 (export main)
 
 (def (main . args)
-  (def projectcmd
-    (command 'project help: "project interactions"
-             (rest-arguments 'args help: "project args")))
   (def inboxcmd
     (command 'inbox help: "inbox interactions"
              (rest-arguments 'args help: "inbox args")))
+  (def projectcmd
+    (command 'project help: "project interactions"
+             (rest-arguments 'args help: "project args")))
+  (def repositorycmd
+    (command 'repository help: "repository interactions"
+             (rest-arguments 'args help: "repository args")))
   (def helpcmd
     (command 'help help: "display usage help"
              (optional-argument 'command value: string->symbol)))
@@ -28,14 +32,16 @@
             (flag 'no-color "-n" help: "disable coloured output")
             projectcmd
             inboxcmd
+            repositorycmd
             helpcmd))
   (try
    (let ((values cmd opt) (getopt-parse gopt args))
      (config (load-config (~ opt 'config)))
      (color-disabled (hash-ref opt 'no-color #f))
      (case cmd
-       ((project) (project/maincmd opt))
        ((inbox) (inbox/maincmd opt))
+       ((project) (project/maincmd opt))
+       ((repository) (repository/maincmd opt))
        ((help)
         (getopt-display-help-topic gopt (hash-get opt 'command) "stashcli"))))
    (catch (getopt-error? exn)
