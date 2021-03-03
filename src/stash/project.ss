@@ -7,6 +7,7 @@
         :std/ref
         :std/net/request
         :std/text/json
+        :colorstring/colorstring
         :stash/utils)
 
 (export (prefix-out maincmd project/))
@@ -21,9 +22,8 @@
   (unless (request-success? req) (error (json-object->string body)))
 
   (for (repo (~ body 'values))
-    (displayln (format "~a: ~a"
-                       (~ repo 'name)
-                       (hash-get repo 'description)))))
+    (display-line [["repo" :: (~ repo 'name)]
+                   ["desc" :: (hash-get repo 'description)]])))
 
 ;; display list of project default reviewers conditions
 ;; hash? string? -> any?
@@ -35,35 +35,38 @@
   (unless (request-success? req) (error (json-object->string body)))
 
   (for (c body)
-    (displayln (format "src: ~a; target: ~a; users: ~a; req approvals: ~a"
-                       (~ c 'sourceRefMatcher 'type 'name)
-                       (~ c 'targetRefMatcher 'type 'name)
-                       (string-join (map (cut ~ <> 'displayName) (~ c 'reviewers)) ",")
-                       (~ c 'requiredApprovals)))))
+    (display-line [["src" :: (~ c 'sourceRefMatcher 'type 'name)]
+                   ["target" :: (~ c 'targetRefMatcher 'type 'name)]
+                   ["users" :: (string-join (map (cut ~ <> 'displayName) (~ c 'reviewers)) ",")]
+                   ["approvals" :: (~ c 'requiredApprovals)]])))
 
 (def (maincmd opt)
   (def args (~ opt 'args))
 
-  (def listrepocmd
+  (def listreposcmd
     (command 'list-repositories help: "list repositories in a project"
-             (argument 'project help: "project")))
+             (optional-argument 'project help: "project"
+                                default: #f)))
 
   (def listreviewerscmd
     (command 'list-reviewers help: "list default reviewers in a project"
-             (argument 'project help: "project")))
+             (optional-argument 'project help: "project"
+                                default: #f)))
 
   (def helpcmd
     (command 'help help: "display project usage help"
              (optional-argument 'command value: string->symbol)))
 
   (def gopt (getopt listreviewerscmd
-                    listrepocmd
+                    listreposcmd
                     helpcmd))
   (try
-   (let ((values cmd opt) (getopt-parse gopt args))
+   (let* (((values cmd opt) (getopt-parse gopt args))
+          (project (or (~ opt 'project) (default-project))))
+     (unless project (error "no project specified."))
      (case cmd
-       ((list-repositories) (list-repositories (~ opt 'project)))
-       ((list-reviewers) (list-reviewers (~ opt 'project)))
+       ((list-repositories) (list-repositories project))
+       ((list-reviewers) (list-reviewers project))
        ((help)
         (getopt-display-help-topic gopt (~ opt 'command) "project"))))
    (catch (getopt-error? exn)

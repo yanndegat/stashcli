@@ -1,18 +1,17 @@
 #!/usr/local/bin/gxi
 ;; -*- Gerbil -*-
 
-(import
-  :std/make)
+(import :std/make)
 
 (def static? (make-parameter #f))
 
 ;; the library module build specification
 (def lib-build-spec
-  '("utils.ss" "project.ss"))
+  '("utils.ss" "project.ss" "inbox.ss"))
 
 (def (bin-build-spec)
   (if (static?)
-    '((static-exe: "stashcli" "-ld-options" "-lyaml -lssl -lz"))
+    '((static-exe: "stashcli" "-cc-options" "-Bstatic" "-ld-options" "-static -lyaml -lssl -lz"))
     '((exe: "stashcli"))))
 
 ;; the source directory anchor
@@ -24,7 +23,6 @@
 
 ;; the main function of the script
 (def (main . args)
-
   (match args
     (["lib"]
      ;; this action builds the library modules -- with static compilation artifacts

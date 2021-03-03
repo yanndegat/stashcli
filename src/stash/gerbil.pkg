@@ -1,1 +1,1 @@
-(package: stash)
+(package: stash depend: ("github.com/yanndegat/colorstring"))
