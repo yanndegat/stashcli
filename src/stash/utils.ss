@@ -4,8 +4,9 @@
         :std/format
         :std/ref
         :std/net/request
-        :colorstring/colorstring
-        :std/text/yaml)
+        :std/srfi/13
+        :std/text/yaml
+        :colorstring/colorstring)
 
 (export #t)
 
@@ -42,3 +43,9 @@
   (string-join
    (map (lambda (attr) (format "[bold][blue]~a[reset]: ~a" (car attr) (cdr attr))) line)
    ", "))
+
+(def (format-pr-state s)
+     (match (string-downcase s)
+            ((equal? "merged") (format "[green]~a[reset]" s))
+            ((equal? "declined") (format "[red]~a[reset]" s))
+            (_ s)))

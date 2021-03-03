@@ -24,7 +24,7 @@
       (display-line [["project" :: (~ pr 'toRef 'repository 'project 'key)]
                      ["repo" :: (~ pr 'toRef 'repository 'slug)]
                      ["ref" :: (~ pr 'toRef 'displayId)]
-                     ["state" :: (~ pr 'state)]
+                     ["state" :: (format-pr-state (~ pr 'state))]
                      ["status" :: approved]
                      ["title" :: (~ pr 'title)]
                      ["author" :: (if (equal? role "author") "me" (~ pr 'author 'user 'name))]]))))

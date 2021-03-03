@@ -15,7 +15,7 @@
 ;; hash? string? -> any?
 (def (list-prs project repo direction state)
   (def url (stash-url (format
-                       "/api/1.0/projects/~a/repos/~a/pull-requests?direction=~a&state~a"
+                       "/api/1.0/projects/~a/repos/~a/pull-requests?direction=~a&state=~a"
                        project repo direction state)))
   (def req (http-get url headers: (default-http-headers)))
   (def body (request-json req))
@@ -24,7 +24,7 @@
   (for (pr (~ body 'values))
     (let ((approved (map (cut ~ <> 'approved) (~ pr 'reviewers))))
       (display-line [["ref" :: (~ pr 'toRef 'displayId)]
-                     ["state" :: (~ pr 'state)]
+                     ["state" :: (format-pr-state (~ pr 'state))]
                      ["status" :: approved]
                      ["title" :: (~ pr 'title)]
                      ["author" :: (~ pr 'author 'user 'name)]]))))
