@@ -3,6 +3,7 @@
         :std/sugar
         :std/getopt
         :std/ref
+        :colorstring/colorstring
         :stash/project
         :stash/inbox
         :stash/utils)
@@ -24,12 +25,14 @@
     (getopt (option 'config "-c" "--config"
                     default: "~/.stashrc.yaml"
                     help: "stash config file")
+            (flag 'no-color "-n" help: "disable coloured output")
             projectcmd
             inboxcmd
             helpcmd))
   (try
    (let ((values cmd opt) (getopt-parse gopt args))
      (config (load-config (~ opt 'config)))
+     (color-disabled (hash-ref opt 'no-color #f))
      (case cmd
        ((project) (project/maincmd opt))
        ((inbox) (inbox/maincmd opt))
