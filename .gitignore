@@ -10,3 +10,6 @@ stashcli
 *.c
 *.scmx
 *.o
+.gerbil
+stashcli
+stashcli-static
