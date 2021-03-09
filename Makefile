@@ -10,6 +10,7 @@ GERBIL_PATH ?= $(PWD)/.gerbil
 
 deps:
 	$(GERBIL_HOME)/bin/gxpkg install github.com/yanndegat/colorstring
+	$(GERBIL_HOME)/bin/gxpkg install github.com/yanndegat/gerbil-url-string
 
 build: deps
 	./build.ss

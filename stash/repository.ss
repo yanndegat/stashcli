@@ -52,7 +52,9 @@
              (option 'project "-p" "--project"
                      default: (default-project)
                      help: "project of the repository")
-             (argument 'repository help: "repository")
+             (optional-argument 'repository
+                                default:(current-repo)
+                                help: "repository")
              help: "list repository pull requests"))
 
   (def helpcmd
