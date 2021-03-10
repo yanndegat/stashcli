@@ -5,6 +5,7 @@
         :std/format
         :std/iter
         :std/ref
+        :std/misc/process
         :std/net/request
         :std/text/json
         :stash/utils)
@@ -13,7 +14,7 @@
 
 ;; display list of pull requests on a repository
 ;; hash? string? -> any?
-(def (diff project repo id)
+(def (diff project repo id git-mode: (git-mode #f))
   (def url (stash-url (format
                        "/api/1.0/projects/~a/repos/~a/pull-requests/~a/diff"
                        project repo id)))
@@ -21,7 +22,10 @@
   (def body (request-json req))
 
   (unless (request-success? req) (error (json-object->string body)))
-  (displayln (json-object->string body)))
+
+  (displayln (if git-mode
+    (run-process `("git" "diff" ,(~ body 'fromHash) ,(~ body 'toHash)))
+    (json-object->string body))))
 
 (def (maincmd opt)
   (def args (~ opt 'args))
@@ -34,6 +38,7 @@
              (option 'repository "-r" "--repository"
                      default: (current-repo)
                      help: "repository")
+             (flag 'git "-g" help: "git diff mode")
              (argument 'id help: "id of the pull request")
              help: "shows pull request diff"))
 
@@ -49,7 +54,8 @@
      (case cmd
        ((diff) (diff (~ opt 'project)
                      (~ opt 'repository)
-                     (~ opt 'id)))
+                     (~ opt 'id)
+                     git-mode: (hash-ref opt 'git #f)))
        ((help)
         (getopt-display-help-topic gopt (~ opt 'command) "pull request"))))
    (catch (getopt-error? exn)
