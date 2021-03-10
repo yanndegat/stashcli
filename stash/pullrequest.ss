@@ -24,8 +24,9 @@
   (unless (request-success? req) (error (json-object->string body)))
 
   (displayln (if git-mode
-    (run-process `("git" "diff" ,(~ body 'fromHash) ,(~ body 'toHash)))
-    (json-object->string body))))
+               (run-process `("git" "--no-pager" "diff" ,(~ body 'fromHash) ,(~ body 'toHash))
+                            pseudo-terminal: #t)
+               (json-object->string body))))
 
 (def (maincmd opt)
   (def args (~ opt 'args))
