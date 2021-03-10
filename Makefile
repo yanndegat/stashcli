@@ -7,16 +7,17 @@
 # @version 0.1
 
 GERBIL_PATH ?= $(PWD)/.gerbil
+all: build
 
 deps:
 	$(GERBIL_HOME)/bin/gxpkg install github.com/yanndegat/colorstring
 	$(GERBIL_HOME)/bin/gxpkg install github.com/yanndegat/gerbil-url-string
 
 build: deps
-	./build.ss
+	GERBIL_PATH=$(GERBIL_PATH) ./build.ss
 
 linux-static: build
-	$(GERBIL_HOME)/bin/gxc -o stashcli-static \
+	GERBIL_PATH=$(GERBIL_PATH) $(GERBIL_HOME)/bin/gxc -o stashcli-static \
     -cc-options "-Bstatic" \
     -static \
     -ld-options "-static -lpthread -L/usr/lib64 -lssl -ldl -lyaml -lz" \
