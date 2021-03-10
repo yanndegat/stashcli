@@ -23,7 +23,8 @@
   (unless (request-success? req) (error (json-object->string body)))
   (for (pr (~ body 'values))
     (let ((approved (map (cut ~ <> 'approved) (~ pr 'reviewers))))
-      (display-line [["ref" :: (~ pr 'toRef 'displayId)]
+      (display-line [["id" :: (~ pr 'id)]
+                     ["ref" :: (~ pr 'toRef 'displayId)]
                      ["state" :: (format-pr-state (~ pr 'state))]
                      ["status" :: approved]
                      ["title" :: (~ pr 'title)]

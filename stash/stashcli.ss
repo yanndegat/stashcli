@@ -6,6 +6,7 @@
         :colorstring/colorstring
         :stash/inbox
         :stash/project
+        :stash/pullrequest
         :stash/repository
         :stash/utils)
 
@@ -18,6 +19,9 @@
   (def projectcmd
     (command 'project help: "project interactions"
              (rest-arguments 'args help: "project args")))
+  (def pullrequestcmd
+    (command 'pr help: "pullrequest interactions"
+             (rest-arguments 'args help: "pullrequest args")))
   (def repositorycmd
     (command 'repository help: "repository interactions"
              (rest-arguments 'args help: "repository args")))
@@ -31,6 +35,7 @@
                     help: "stash config file")
             (flag 'no-color "-n" help: "disable coloured output")
             projectcmd
+            pullrequestcmd
             inboxcmd
             repositorycmd
             helpcmd))
@@ -41,6 +46,7 @@
      (case cmd
        ((inbox) (inbox/maincmd opt))
        ((project) (project/maincmd opt))
+       ((pr) (pullrequest/maincmd opt))
        ((repository) (repository/maincmd opt))
        ((help)
         (getopt-display-help-topic gopt (hash-get opt 'command) "stashcli"))))
