@@ -19,16 +19,14 @@
                        project repo direction state)))
   (def req (http-get url headers: (default-http-headers)))
   (def body (request-json req))
-
   (unless (request-success? req) (error (json-object->string body)))
   (for (pr (~ body 'values))
-    (let ((approved (map (cut ~ <> 'approved) (~ pr 'reviewers))))
       (display-line [["id" :: (~ pr 'id)]
                      ["ref" :: (~ pr 'toRef 'displayId)]
                      ["state" :: (format-pr-state (~ pr 'state))]
-                     ["status" :: approved]
+                     ["status" :: (format-pr-approval-status pr)]
                      ["title" :: (~ pr 'title)]
-                     ["author" :: (~ pr 'author 'user 'name)]]))))
+                     ["author" :: (~ pr 'author 'user 'name)]])))
 
 (def (maincmd opt)
   (def args (~ opt 'args))

@@ -20,14 +20,14 @@
 
   (unless (request-success? req) (error (json-object->string body)))
   (for (pr (~ body 'values))
-    (let ((approved (map (cut ~ <> 'approved) (~ pr 'reviewers))))
-      (display-line [["project" :: (~ pr 'toRef 'repository 'project 'key)]
-                     ["repo" :: (~ pr 'toRef 'repository 'slug)]
-                     ["ref" :: (~ pr 'toRef 'displayId)]
-                     ["state" :: (format-pr-state (~ pr 'state))]
-                     ["status" :: approved]
-                     ["title" :: (~ pr 'title)]
-                     ["author" :: (if (equal? role "author") "me" (~ pr 'author 'user 'name))]]))))
+    (display-line [["project" :: (~ pr 'toRef 'repository 'project 'key)]
+                   ["repo" :: (~ pr 'toRef 'repository 'slug)]
+                   ["id" :: (~ pr 'id)]
+                   ["ref" :: (~ pr 'toRef 'displayId)]
+                   ["state" :: (format-pr-state (~ pr 'state))]
+                   ["status" :: (format-pr-approval-status pr)]
+                   ["title" :: (~ pr 'title)]
+                   ["author" :: (if (equal? role "author") "me" (~ pr 'author 'user 'name))]])))
 
 (def (maincmd opt)
   (def args (~ opt 'args))

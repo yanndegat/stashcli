@@ -39,6 +39,14 @@
 (def (request-success? req)
   (and (>= (request-status req) 200) (<= (request-status req) 299)))
 
+(def (format-pr-approval-status pr)
+  (map (lambda (r)
+         (case (~ r 'status)
+          (("APPROVED") "[green]☑[reset]")
+          (("NEEDS_WORK") "[red]☒[reset]")
+          (else "☐")))
+       (~ pr 'reviewers)))
+
 (def (display-line line)
   (displayln (color (format-line line))))
 
