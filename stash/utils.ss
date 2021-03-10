@@ -62,11 +62,12 @@
     (_ s)))
 
 (def rx-upstream-track "^# branch.upstream ([[:alnum:]]+)/.+$")
-(def (upstream-track)
-  (let* ((status (pregexp-split "\n" (run-process '("git" "status" "--porcelain=2" "-b")
-                                                  stderr-redirection: #t)))
-         (upstream-track (car (filter (cut pregexp-match rx-upstream-track <>) status))))
-    (pregexp-replace rx-upstream-track upstream-track "\\1")))
+(def upstream-track
+  (make-parameter
+   (let* ((status (pregexp-split "\n" (run-process '("git" "status" "--porcelain=2" "-b")
+                                                   stderr-redirection: #t)))
+          (upstream-track (car (filter (cut pregexp-match rx-upstream-track <>) status))))
+     (pregexp-replace rx-upstream-track upstream-track "\\1"))))
 
 (def (this-repo-url)
   (let ((remote-url (string-trim-eol (run-process `("git" "remote" "get-url" "--push" ,(upstream-track))

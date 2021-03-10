@@ -25,11 +25,13 @@
   (def body (request-json req))
 
   (unless (request-success? req) (error (json-object->string body)))
-
-  (displayln (if git-mode
-               (run-process `("git" "--no-pager" "diff" ,(~ body 'fromHash) ,(~ body 'toHash))
-                            pseudo-terminal: #t)
-               (json-object->string body))))
+  (if git-mode
+    (and (run-process `("git" "fetch"
+                        ,(upstream-track) ,(~ body 'fromHash) ,(~ body 'toHash)))
+         (displayln (run-process `("git" "--no-pager" "diff"
+                                   ,(~ body 'fromHash) ,(~ body 'toHash))
+                                 pseudo-terminal: #t)))
+    (displayln (json-object->string body))))
 
 (def (list project repo direction state)
   (def url (stash-url (format
