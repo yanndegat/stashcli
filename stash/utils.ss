@@ -53,7 +53,7 @@
     ((equal? "declined") (format "[red]~a[reset]" s))
     (_ s)))
 
-(def rx-upstream-track "^# branch.upstream ([[:alnum:]]+)/[[:alnum:]]+$")
+(def rx-upstream-track "^# branch.upstream ([[:alnum:]]+)/.+$")
 (def (upstream-track)
   (let* ((status (pregexp-split "\n" (run-process '("git" "status" "--porcelain=2" "-b")
                                                   stderr-redirection: #t)))
