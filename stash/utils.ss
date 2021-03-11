@@ -9,6 +9,7 @@
         :std/ref
         :std/srfi/13
         :std/sugar
+        :std/text/json
         :std/text/yaml
         :url-string/url-string
         :colorstring/colorstring)
@@ -47,12 +48,16 @@
           (else "☐")))
        (~ pr 'reviewers)))
 
-(def (display-line line)
-  (displayln (color (format-line line))))
+(def (display-line line default-colors?: (default-colors? #t))
+  (displayln (color (format-line line default-colors?: default-colors?))))
 
-(def (format-line line)
+(def (format-line line default-colors?: (default-colors? #t))
   (string-join
-   (map (lambda (attr) (format "[bold][blue]~a[reset]: ~a" (car attr) (cdr attr))) line)
+   (map (lambda (attr)
+          (if default-colors?
+            (format "[bold][blue]~a[reset]: ~a" (car attr) (cdr attr))
+            (format "~a: ~a" (car attr) (cdr attr))))
+        line)
    ", "))
 
 (def (format-pr-state s)
@@ -88,4 +93,18 @@
                        (string-trim-suffix ".git" (path/param-path (cadr (url-path repo-url))))
                        #f))))
 
+(def (current-remote-branch) #f )
+
+(def (remote-main-branch) #f)
+
 (def (default-project) (or (current-project) (~ (config) 'default-project)))
+
+(def (repo-branches project repo)
+  (def url (stash-url (format
+                       "/api/1.0/projects/~a/repos/~a/branches"
+                       project repo)))
+
+  (def req (http-get url headers: (default-http-headers)))
+  (def body (request-json req))
+  (unless (request-success? req) (error (json-object->string body)))
+  (~ body 'values))
