@@ -33,7 +33,11 @@
     (getopt (option 'config "-c" "--config"
                     default: "~/.stashrc.yaml"
                     help: "stash config file")
+            (option 'remote "-r" "--remote"
+                    default: "origin"
+                    help: "git remote")
             (flag 'no-color "-n" help: "disable coloured output")
+            (flag 'debug "-d" help: "debug mode")
             projectcmd
             pullrequestcmd
             inboxcmd
@@ -41,7 +45,9 @@
             helpcmd))
   (try
    (let ((values cmd opt) (getopt-parse gopt args))
-     (config (load-config (~ opt 'config)))
+     (init (~ opt 'config)
+           debug?: (hash-ref opt 'debug #f)
+           git-remote: (hash-ref opt 'remote #f))
      (color-disabled (hash-ref opt 'no-color #f))
      (case cmd
        ((inbox) (inbox/maincmd opt))

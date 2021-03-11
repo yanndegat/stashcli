@@ -10,21 +10,42 @@
         :stash/pullrequest
         :stash/utils)
 
-(export (prefix-out maincmd repository/))
+(export (prefix-out maincmd repository/)
+        (prefix-out infocmd repository/)
+        (prefix-out info repository/))
 
 (def (list-branches project repo)
   (let ((branches (repo-branches project repo)))
     (for (b branches)
       (if (~ b 'isDefault)
         (display-line default-colors?: #f
-                      [["[green]id[reset]" :: (format "[underline]~a[reset]"(~ b 'id))]
-                       ["[green]displayId[reset]" :: (~ b 'displayId)]
-                       ["[underline][green]default[reset]" :: (~ b 'isDefault)]
-                       ["[green]commit[reset]" :: (~ b 'latestCommit)]])
+                      [["[red]id[reset]" :: (format "[underline]~a[reset]"(~ b 'id))]
+                       ["[blue]displayId[reset]" :: (~ b 'displayId)]
+                       ["[blue]default[reset]" :: (~ b 'isDefault)]
+                       ["[blue]commit[reset]" :: (~ b 'latestCommit)]])
         (display-line [["id" :: (~ b 'id)]
                        ["displayId" :: (~ b 'displayId)]
                        ["default" :: (~ b 'isDefault)]
                        ["commit" :: (~ b 'latestCommit)]])))))
+
+(def (info project repo)
+  (def url (stash-url (format "/api/1.0/projects/~a/repos/~a"
+                              project repo)))
+  (def req (http-get url headers: (default-http-headers)))
+  (def body (request-json req))
+  (unless (request-success? req) (error (json-object->string body)))
+  (display-attrs body))
+
+(def (infocmd id)
+  (command id
+           (option 'project "-p" "--project"
+                   default: (default-project)
+                   help: "project of the repository")
+
+           (optional-argument 'repository
+                              default:(current-repo)
+                              help: "repository")
+           help: "show repository information"))
 
 (def (maincmd opt)
   (def args (~ opt 'args))
@@ -45,6 +66,7 @@
              help: "list repository branches"))
 
   (def gopt (getopt (pullrequest/listcmd 'list-prs)
+                    (infocmd 'info)
                     listbranchescmd
                     helpcmd))
   (try
@@ -57,6 +79,8 @@
                                      (~ opt 'state)))
        ((list-branches) (list-branches (~ opt 'project)
                                        (~ opt 'repository)))
+       ((info) (info (~ opt 'project)
+                     (~ opt 'repository)))
        ((help)
         (getopt-display-help-topic gopt (~ opt 'command) "repository"))))
    (catch (getopt-error? exn)
