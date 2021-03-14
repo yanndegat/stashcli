@@ -8,7 +8,8 @@
         :stash/project
         :stash/pullrequest
         :stash/repository
-        :stash/utils)
+        :stash/utils
+        :stash/context)
 
 (export main)
 
@@ -34,7 +35,7 @@
                     default: "~/.stashrc.yaml"
                     help: "stash config file")
             (option 'remote "-r" "--remote"
-                    default: "origin"
+                    default: #f
                     help: "git remote")
             (flag 'no-color "-n" help: "disable coloured output")
             (flag 'debug "-d" help: "debug mode")

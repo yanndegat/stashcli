@@ -5,9 +5,8 @@
         :std/format
         :std/iter
         :std/ref
-        :std/net/request
-        :std/text/json
-        :colorstring/colorstring
+        :stash/api
+        :stash/context
         :stash/utils)
 
 (export (prefix-out maincmd project/))
@@ -15,26 +14,14 @@
 ;; display list of project repositoties
 ;; hash? string? -> any?
 (def (list-repositories project)
-  (def url (stash-url (format "/api/1.0/projects/~a/repos?limit=1000" project)))
-  (def req (http-get url headers: (default-http-headers)))
-  (def body (request-json req))
-
-  (unless (request-success? req) (error (json-object->string body)))
-
-  (for (repo (~ body 'values))
+  (for (repo (projects/repos (context) project))
     (display-line [["repo" :: (~ repo 'name)]
                    ["desc" :: (hash-get repo 'description)]])))
 
 ;; display list of project default reviewers conditions
 ;; hash? string? -> any?
 (def (list-reviewers project)
-  (def url (stash-url (format "/default-reviewers/1.0/projects/~a/conditions" project)))
-  (def req (http-get url headers: (default-http-headers)))
-  (def body (request-json req))
-
-  (unless (request-success? req) (error (json-object->string body)))
-
-  (for (c body)
+  (for (c (default-reviewers/projects/conditions (context) project))
     (display-line [["src" :: (~ c 'sourceRefMatcher 'type 'name)]
                    ["target" :: (~ c 'targetRefMatcher 'type 'name)]
                    ["users" :: (string-join (map (cut ~ <> 'displayName) (~ c 'reviewers)) ",")]

@@ -4,9 +4,11 @@
 (import :std/build-script)
 
 (defbuild-script
-  '("stash/inbox"
+  '("stash/utils"
+    "stash/api"
+    "stash/context"
+    "stash/inbox"
     "stash/project"
-    "stash/utils"
     "stash/repository"
     "stash/pullrequest"
     (exe: "stash/stashcli")))

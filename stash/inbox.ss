@@ -5,8 +5,8 @@
         :std/format
         :std/iter
         :std/ref
-        :std/net/request
-        :std/text/json
+        :stash/api
+        :stash/context
         :stash/utils)
 
 (export (prefix-out maincmd inbox/))
@@ -14,12 +14,7 @@
 ;; display list of project repositoties
 ;; hash? string? -> any?
 (def (list-prs role)
-  (def url (stash-url (format "/api/1.0/inbox/pull-requests?role=~a" role)))
-  (def req (http-get url headers: (default-http-headers)))
-  (def body (request-json req))
-
-  (unless (request-success? req) (error (json-object->string body)))
-  (for (pr (~ body 'values))
+  (for (pr (inbox/pull-requests (context) role))
     (display-line [["project" :: (~ pr 'toRef 'repository 'project 'key)]
                    ["repo" :: (~ pr 'toRef 'repository 'slug)]
                    ["id" :: (~ pr 'id)]

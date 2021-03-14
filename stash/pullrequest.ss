@@ -6,8 +6,9 @@
         :std/iter
         :std/ref
         :std/misc/process
-        :std/net/request
         :std/text/json
+        :stash/api
+        :stash/context
         :stash/utils)
 
 (export
@@ -17,37 +18,43 @@
 
 ;; display list of pull requests on a repository
 ;; hash? string? -> any?
-(def (diff project repo id git-mode: (git-mode #f))
-  (def url (stash-url (format
-                       "/api/1.0/projects/~a/repos/~a/pull-requests/~a/diff"
-                       project repo id)))
-  (def req (http-get url headers: (default-http-headers)))
-  (def body (request-json req))
-
-  (unless (request-success? req) (error (json-object->string body)))
-  (if git-mode
-    (and (run-process `("git" "fetch"
-                        ,(upstream-track) ,(~ body 'fromHash) ,(~ body 'toHash)))
-         (displayln (run-process `("git" "--no-pager" "diff"
-                                   ,(~ body 'fromHash) ,(~ body 'toHash))
-                                 pseudo-terminal: #t)))
-    (displayln (json-object->string body))))
+(def (diff project repo id difftool-mode: (difftool-mode #f))
+  (let ((body (projects/repos/pull-requests/diff (context) project repo id)))
+    (unless (run-process `("git" "fetch"
+                           ,(git-remote) ,(~ body 'fromHash) ,(~ body 'toHash)))
+      (error "could not fetch refs ~a/~a, ~a/~a" repo (~ body 'fromHash) repo (~ body 'toHash)))
+    (if difftool-mode
+      (displayln (format "git difftool ~a ~a" (~ body 'fromHash) (~ body 'toHash)))
+      (displayln (run-process `("git" "--no-pager" "diff"
+                                ,(~ body 'fromHash) ,(~ body 'toHash))
+                              pseudo-terminal: #t)))))
 
 (def (list project repo direction state)
-  (def url (stash-url (format
-                       "/api/1.0/projects/~a/repos/~a/pull-requests?direction=~a&state=~a"
-                       project repo direction state)))
-  (def req (http-get url headers: (default-http-headers)))
-  (def body (request-json req))
-  (unless (request-success? req) (error (json-object->string body)))
-  (for (pr (~ body 'values))
-      (display-line [["id" :: (~ pr 'id)]
-                     ["ref" :: (~ pr 'toRef 'displayId)]
-                     ["state" :: (format-pr-state (~ pr 'state))]
-                     ["status" :: (format-pr-approval-status pr)]
-                     ["title" :: (~ pr 'title)]
-                     ["author" :: (~ pr 'author 'user 'name)]])))
+  (for (pr (projects/repos/pull-requests (context) project repo direction state))
+    (display-line [["id" :: (~ pr 'id)]
+                   ["ref" :: (~ pr 'toRef 'displayId)]
+                   ["state" :: (format-pr-state (~ pr 'state))]
+                   ["status" :: (format-pr-approval-status pr)]
+                   ["title" :: (~ pr 'title)]
+                   ["author" :: (~ pr 'author 'user 'name)]])))
 
+(def (info project repo id)
+  (display-attrs (projects/repos/pull-request (context) project repo id)))
+
+(def (delete project repo id version)
+  (when (projects/repos/pull-requests/delete (context) project repo id version: version)
+    (displayln "deleted!")))
+
+(def (create project repo title from to reviewers desc)
+  (unless project (error "no project specified."))
+  (unless repo (error "no repository specified."))
+  (unless from (error "no from branch specified."))
+  (unless to (error "no from branch specified."))
+  (let* ((conditions (default-reviewers/projects/conditions (context) project))
+         (reviewers  (map (cut ~ <> 'name) (~ (car conditions) 'reviewers))))
+    (displayln
+     (json-object->string
+      (projects/repos/pull-requests/create (context) project repo from to title desc reviewers)))))
 
 (def (listcmd id)
   (command id
@@ -86,30 +93,95 @@
              (option 'repository "-r" "--repository"
                      default: (current-repo)
                      help: "repository")
-             (flag 'git "-g" help: "git diff mode")
+             (flag 'difftool "-dt" help: "git difftool mode")
              (argument 'id help: "id of the pull request")
              help: "shows pull request diff"))
+
+  (def createcmd
+    (command 'create
+             (option 'project "-p" "--project"
+                     default: (default-project)
+                     help: "project of the repository")
+             (option 'repository "-r" "--repository"
+                     default: (current-repo)
+                     help: "repository")
+             (option 'reviewers "-R" "--reviewers"
+                     default: #f
+                     help: "repository")
+             (option 'desc "-d" "--description"
+                     default: #f
+                     help: "description of the pull request. - for stdin")
+             (argument 'title help: "title of the pull request")
+             (optional-argument 'to
+                                help: "destination branch"
+                                default: (and (default-remote-branch)
+                                              (hash-ref (default-remote-branch) 'id #f)))
+             (optional-argument 'from help: "from branch"
+                                default: (and (current-remote-branch)
+                                              (hash-ref (current-remote-branch) 'id #f)))
+             help: "create pull request"))
+
+  (def deletecmd
+    (command 'delete
+             (option 'project "-p" "--project"
+                     default: (default-project)
+                     help: "project of the repository")
+             (option 'repository "-r" "--repository"
+                     default: (current-repo)
+                     help: "repository")
+             (argument 'id help: "id of the pull request")
+             (optional-argument 'version
+                                help: "pull request version"
+                                default: 0)
+             help: "delete pull request"))
+
+ (def infocmd
+    (command 'info
+             (option 'project "-p" "--project"
+                     default: (default-project)
+                     help: "project of the repository")
+             (option 'repository "-r" "--repository"
+                     default: (current-repo)
+                     help: "repository")
+             (argument 'id help: "id of the pull request")
+             help: "info pull request"))
 
   (def helpcmd
     (command 'help help: "display repository usage help"
              (optional-argument 'command value: string->symbol)))
 
-  (def gopt (getopt diffcmd
+  (def gopt (getopt createcmd
+                    deletecmd
+                    infocmd
+                    diffcmd
                     (listcmd 'list)
                     helpcmd))
   (try
-   (let* (((values cmd opt) (getopt-parse gopt args))
-          (project (or (~ opt 'project) (default-project))))
+   (let (((values cmd opt) (getopt-parse gopt args)))
      (case cmd
        ((diff) (diff (~ opt 'project)
                      (~ opt 'repository)
                      (~ opt 'id)
-                     git-mode: (hash-ref opt 'git #f)))
+                     difftool-mode: (hash-ref opt 'difftool #f)))
        ((list) (list (~ opt 'project)
                      (~ opt 'repository)
                      (~ opt 'direction)
                      (~ opt 'state)))
+       ((delete) (delete (~ opt 'project)
+                         (~ opt 'repository)
+                         (~ opt 'id)
+                         (~ opt 'version)))
+       ((info) (info (~ opt 'project)
+                     (~ opt 'repository)
+                     (~ opt 'id)))
+       ((create) (create (~ opt 'project)
+                         (~ opt 'repository)
+                         (~ opt 'title)
+                         (~ opt 'from)
+                         (~ opt 'to)
+                         (~ opt 'reviewers)
+                         (~ opt 'desc)))
        ((help)
-        (getopt-display-help-topic gopt (~ opt 'command) "pull request"))))
+        (getopt-display-help-topic gopt (~ opt 'command) "pr"))))
    (catch (getopt-error? exn)
-     (getopt-display-help exn "pull request" (current-error-port)))))
+     (getopt-display-help exn "pr" (current-error-port)))))

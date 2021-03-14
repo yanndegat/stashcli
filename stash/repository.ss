@@ -5,17 +5,16 @@
         :std/format
         :std/iter
         :std/ref
-        :std/net/request
         :std/text/json
+        :stash/api
+        :stash/context
         :stash/pullrequest
         :stash/utils)
 
-(export (prefix-out maincmd repository/)
-        (prefix-out infocmd repository/)
-        (prefix-out info repository/))
+(export (prefix-out maincmd repository/))
 
 (def (list-branches project repo)
-  (let ((branches (repo-branches project repo)))
+  (let ((branches (projects/repos/branches (context) project repo)))
     (for (b branches)
       (if (~ b 'isDefault)
         (display-line default-colors?: #f
@@ -29,12 +28,7 @@
                        ["commit" :: (~ b 'latestCommit)]])))))
 
 (def (info project repo)
-  (def url (stash-url (format "/api/1.0/projects/~a/repos/~a"
-                              project repo)))
-  (def req (http-get url headers: (default-http-headers)))
-  (def body (request-json req))
-  (unless (request-success? req) (error (json-object->string body)))
-  (display-attrs body))
+  (display-attrs (projects/repo (context) project repo)))
 
 (def (infocmd id)
   (command id
