@@ -14,49 +14,51 @@
 (export main)
 
 (def (main . args)
-  (def inboxcmd
-    (command 'inbox help: "inbox interactions"
-             (rest-arguments 'args help: "inbox args")))
-  (def projectcmd
-    (command 'project help: "project interactions"
-             (rest-arguments 'args help: "project args")))
-  (def pullrequestcmd
-    (command 'pr help: "pullrequest interactions"
-             (rest-arguments 'args help: "pullrequest args")))
-  (def repositorycmd
-    (command 'repository help: "repository interactions"
-             (rest-arguments 'args help: "repository args")))
-  (def helpcmd
-    (command 'help help: "display usage help"
-             (optional-argument 'command value: string->symbol)))
+     (def inboxcmd
+          (command 'inbox help: "inbox interactions"
+                   (rest-arguments 'args help: "inbox args")))
+     (def projectcmd
+          (command 'project help: "project interactions"
+                   (rest-arguments 'args help: "project args")))
+     (def pullrequestcmd
+          (command 'pr help: "pullrequest interactions"
+                   (rest-arguments 'args help: "pullrequest args")))
+     (def repositorycmd
+          (command 'repository help: "repository interactions"
+                   (rest-arguments 'args help: "repository args")))
+     (def helpcmd
+          (command 'help help: "display usage help"
+                   (optional-argument 'command value: string->symbol)))
 
-  (def gopt
-    (getopt (option 'config "-c" "--config"
-                    default: "~/.stashrc.yaml"
-                    help: "stash config file")
-            (option 'remote "-r" "--remote"
-                    default: #f
-                    help: "git remote")
-            (flag 'no-color "-n" help: "disable coloured output")
-            (flag 'debug "-d" help: "debug mode")
-            projectcmd
-            pullrequestcmd
-            inboxcmd
-            repositorycmd
-            helpcmd))
-  (try
-   (let ((values cmd opt) (getopt-parse gopt args))
-     (init (~ opt 'config)
-           debug?: (hash-ref opt 'debug #f)
-           git-remote: (hash-ref opt 'remote #f))
-     (color-disabled (hash-ref opt 'no-color #f))
-     (case cmd
-       ((inbox) (inbox/maincmd opt))
-       ((project) (project/maincmd opt))
-       ((pr) (pullrequest/maincmd opt))
-       ((repository) (repository/maincmd opt))
-       ((help)
-        (getopt-display-help-topic gopt (hash-get opt 'command) "stashcli"))))
-   (catch (getopt-error? exn)
-     (getopt-display-help exn "stashcli" (current-error-port))
-     (exit 1))))
+     (def gopt
+          (getopt (option 'config "-c" "--config"
+                          default: "~/.stashrc.yaml"
+                          help: "stash config file")
+                  (option 'remote "-r" "--remote"
+                          default: #f
+                          help: "git remote")
+                  (flag 'no-color "-n" help: "disable coloured output")
+                  (flag 'debug "-d" help: "debug mode")
+                  projectcmd
+                  pullrequestcmd
+                  inboxcmd
+                  repositorycmd
+                  helpcmd))
+     (try
+      (let ((values cmd opt) (getopt-parse gopt args))
+        (when (equal? 'help cmd)
+          (and (getopt-display-help-topic gopt (hash-get opt 'command) "stashcli")
+               (exit 0)))
+
+        (init (~ opt 'config)
+              debug?: (hash-ref opt 'debug #f)
+              git-remote: (hash-ref opt 'remote #f))
+        (color-disabled (hash-ref opt 'no-color #f))
+        (case cmd
+          ((inbox) (inbox/maincmd opt))
+          ((project) (project/maincmd opt))
+          ((pr) (pullrequest/maincmd opt))
+          ((repository) (repository/maincmd opt))))
+      (catch (getopt-error? exn)
+             (and (getopt-display-help exn "stashcli" (current-error-port))
+                  (exit 1)))))

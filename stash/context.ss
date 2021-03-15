@@ -114,7 +114,7 @@
   (init-current-project)
   (and debug? (debug "init current project: ~a" (current-project)))
   (init-current-repo)
-  (and debug? (debug "init current upstream: ~a" (current-upstream)))
+  (and debug? (debug "init current repo: ~a" (current-repo)))
   (init-current-remote-branch)
   (and debug? (debug "init current remote branch: ~a" (current-remote-branch)))
   (init-git-remote remote)
