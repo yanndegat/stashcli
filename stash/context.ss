@@ -20,6 +20,8 @@
 
 (export #t)
 
+(def rx-upstream-track "^# branch.upstream ([[:alnum:]]+)/(.+)$")
+
 (def (upstream-track)
   (and (current-upstream)
        (pregexp-replace rx-upstream-track (current-upstream) "\\1")))
@@ -38,13 +40,11 @@
        (car (filter (cut ~ <> 'isDefault)
                     (projects/repos/branches (context) project repo)))))
 
-(def rx-upstream-track "^# branch.upstream ([[:alnum:]]+)/(.+)$")
-
 (def git-remote (make-parameter #f))
 (def (init-git-remote remote)
   (unless (or (and remote (git-remote remote))
               (and (upstream-track) (git-remote (upstream-track))))
-    (error "could not init git remote: try with --remote.")))
+    (error "could not init git remote: try with --remote (e.g.: '--remote origin').")))
 
 (def current-upstream (make-parameter #f))
 (def (init-current-upstream)
