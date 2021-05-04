@@ -51,10 +51,10 @@
   (unless from (error "no from branch specified."))
   (unless to (error "no from branch specified."))
   (let* ((conditions (default-reviewers/projects/conditions (context) project))
-         (reviewers  (map (cut ~ <> 'name) (~ (car conditions) 'reviewers))))
-    (displayln
-     (json-object->string
-      (projects/repos/pull-requests/create (context) project repo from to title desc reviewers)))))
+         (reviewers  (map (cut ~ <> 'name) (~ (car conditions) 'reviewers)))
+         (pr (projects/repos/pull-requests/create (context) project repo from to title desc reviewers)))
+    (display-line [["id" :: (~ pr 'id)]
+                   ["href" :: (~ pr 'links 'self 0 'href)]])))
 
 (def (listcmd id)
   (command id
