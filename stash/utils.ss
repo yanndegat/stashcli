@@ -16,8 +16,8 @@
 (def (format-pr-approval-status pr)
   (map (lambda (r)
          (case (~ r 'status)
-          (("APPROVED") "[green]✓[reset]")
-          (("NEEDS_WORK") "[red]x[reset]")
+          (("APPROVED") "[green]\u2713[reset]")
+          (("NEEDS_WORK") "[red]\u2716[reset]")
           (else "☐")))
        (~ pr 'reviewers)))
 
