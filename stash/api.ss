@@ -119,6 +119,46 @@
   (unless (request-success? req) (error (~ (request-json req) 'errors 0 'message)))
   #t)
 
+(def (projects/repos/pull-requests/approve ctx project repo id version: (version 0))
+  (def url (stash-url ctx (format
+                           "/api/1.0/projects/~a/repos/~a/pull-requests/~a/approve"
+                           project repo id)))
+  (def req (http-post url
+                        headers: (json-http-headers ctx)
+                        data: (json-object->string (hash (version version)))))
+  (unless (request-success? req) (error (~ (request-json req) 'errors 0 'message)))
+  #t)
+
+(def (projects/repos/pull-requests/unapprove ctx project repo id version: (version 0))
+  (def url (stash-url ctx (format
+                           "/api/1.0/projects/~a/repos/~a/pull-requests/~a/approve"
+                           project repo id)))
+  (def req (http-delete url
+                        headers: (json-http-headers ctx)
+                        data: (json-object->string (hash (version version)))))
+  (unless (request-success? req) (error (~ (request-json req) 'errors 0 'message)))
+  #t)
+
+(def (projects/repos/pull-requests/decline ctx project repo id version: (version 0))
+  (def url (stash-url ctx (format
+                           "/api/1.0/projects/~a/repos/~a/pull-requests/~a/decline"
+                           project repo id)))
+  (def req (http-post url
+                        headers: (json-http-headers ctx)
+                        data: (json-object->string (hash (version version)))))
+  (unless (request-success? req) (error (~ (request-json req) 'errors 0 'message)))
+  #t)
+
+(def (projects/repos/pull-requests/merge ctx project repo id version: (version 0))
+  (def url (stash-url ctx (format
+                           "/api/1.0/projects/~a/repos/~a/pull-requests/~a/merge"
+                           project repo id)))
+  (def req (http-post url
+                        headers: (json-http-headers ctx)
+                        data: (json-object->string (hash (version version)))))
+  (unless (request-success? req) (error (~ (request-json req) 'errors 0 'message)))
+  #t)
+
 (def (inbox/pull-requests ctx role)
   (def url (stash-url ctx (format "/api/1.0/inbox/pull-requests?role=~a" role)))
   (def req (http-get url headers: (default-http-headers ctx)))

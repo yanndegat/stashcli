@@ -45,6 +45,22 @@
   (when (projects/repos/pull-requests/delete (context) project repo id version: version)
     (displayln "deleted!")))
 
+(def (approve project repo id version)
+  (when (projects/repos/pull-requests/approve (context) project repo id version: version)
+    (displayln "approved!")))
+
+(def (unapprove project repo id version)
+  (when (projects/repos/pull-requests/unapprove (context) project repo id version: version)
+    (displayln "unapproved!")))
+
+(def (decline project repo id version)
+  (when (projects/repos/pull-requests/decline (context) project repo id version: version)
+    (displayln "declined!")))
+
+(def (merge project repo id version)
+  (when (projects/repos/pull-requests/merge (context) project repo id version: version)
+    (displayln "merged!")))
+
 (def (create project repo title from to reviewers desc)
   (unless project (error "no project specified."))
   (unless repo (error "no repository specified."))
@@ -55,6 +71,21 @@
          (pr (projects/repos/pull-requests/create (context) project repo from to title desc reviewers)))
     (display-line [["id" :: (~ pr 'id)]
                    ["href" :: (~ pr 'links 'self 0 'href)]])))
+
+
+(def (actioncmd id)
+     (command id
+              (option 'project "-p" "--project"
+                      default: (default-project)
+                      help: "project of the repository")
+              (option 'repository "-r" "--repository"
+                      default: (current-repo)
+                      help: "repository")
+              (argument 'id help: "id of the pull request")
+              (optional-argument 'version
+                                 help: "pull request version"
+                                 default: 0)
+              help: (format "~a pull request" id)))
 
 (def (listcmd id)
   (command id
@@ -121,20 +152,6 @@
                                               (hash-ref (current-remote-branch) 'id #f)))
              help: "create pull request"))
 
-  (def deletecmd
-    (command 'delete
-             (option 'project "-p" "--project"
-                     default: (default-project)
-                     help: "project of the repository")
-             (option 'repository "-r" "--repository"
-                     default: (current-repo)
-                     help: "repository")
-             (argument 'id help: "id of the pull request")
-             (optional-argument 'version
-                                help: "pull request version"
-                                default: 0)
-             help: "delete pull request"))
-
  (def infocmd
     (command 'info
              (option 'project "-p" "--project"
@@ -151,7 +168,11 @@
              (optional-argument 'command value: string->symbol)))
 
   (def gopt (getopt createcmd
-                    deletecmd
+                    (actioncmd 'delete)
+                    (actioncmd 'unapprove)
+                    (actioncmd 'approve)
+                    (actioncmd 'decline)
+                    (actioncmd 'merge)
                     infocmd
                     diffcmd
                     (listcmd 'list)
@@ -171,6 +192,22 @@
                          (~ opt 'repository)
                          (~ opt 'id)
                          (~ opt 'version)))
+       ((merge) (merge (~ opt 'project)
+                       (~ opt 'repository)
+                       (~ opt 'id)
+                       (~ opt 'version)))
+       ((decline) (decline (~ opt 'project)
+                           (~ opt 'repository)
+                           (~ opt 'id)
+                           (~ opt 'version)))
+       ((approve) (approve (~ opt 'project)
+                           (~ opt 'repository)
+                           (~ opt 'id)
+                           (~ opt 'version)))
+       ((unapprove) (unapprove (~ opt 'project)
+                               (~ opt 'repository)
+                               (~ opt 'id)
+                               (~ opt 'version)))
        ((info) (info (~ opt 'project)
                      (~ opt 'repository)
                      (~ opt 'id)))
@@ -184,4 +221,4 @@
        ((help)
         (getopt-display-help-topic gopt (~ opt 'command) "pr"))))
    (catch (getopt-error? exn)
-     (getopt-display-help exn "pr" (current-error-port)))))
+          (getopt-display-help exn "pr" (current-error-port)))))

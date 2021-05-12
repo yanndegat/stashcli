@@ -39,6 +39,7 @@
                           help: "git remote")
                   (flag 'no-color "-n" help: "disable coloured output")
                   (flag 'debug "-d" help: "debug mode")
+                  (flag 'quiet "-q" help: "quiet mode: only field values are displayed")
                   projectcmd
                   pullrequestcmd
                   inboxcmd
@@ -52,6 +53,7 @@
 
         (init (~ opt 'config)
               debug?: (hash-ref opt 'debug #f)
+              quiet?: (hash-ref opt 'quiet #f)
               git-remote: (hash-ref opt 'remote #f))
         (color-disabled (hash-ref opt 'no-color #f))
         (case cmd
