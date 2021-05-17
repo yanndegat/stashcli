@@ -80,8 +80,8 @@
                                (repository (hash (project (hash (key project)))
                                                  (slug (format "~a" repo))))))
                   (title title)
-                  (description (or desc ""))))
-                                        ;(reviewers (string-join reviewers "|!|"))))
+                  (description (or desc ""))
+                  (reviewers reviewers)))
 
   (def req (http-post url
                       headers: (default-http-headers ctx)

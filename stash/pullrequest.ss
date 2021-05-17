@@ -66,8 +66,13 @@
   (unless repo (error "no repository specified."))
   (unless from (error "no from branch specified."))
   (unless to (error "no from branch specified."))
+
   (let* ((conditions (default-reviewers/projects/conditions (context) project))
-         (reviewers  (map (cut ~ <> 'name) (~ (car conditions) 'reviewers)))
+         (reviewers  (map (lambda (r)
+                            (hash (user (hash (id  (~ r 'id))
+                                              (name  (~ r 'name))
+                                              (displayName  (~ r 'displayName))))))
+                          (~ (car conditions) 'reviewers)))
          (pr (projects/repos/pull-requests/create (context) project repo from to title desc reviewers)))
     (display-line [["id" :: (~ pr 'id)]
                    ["href" :: (~ pr 'links 'self 0 'href)]])))
