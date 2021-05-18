@@ -160,7 +160,7 @@
   #t)
 
 (def (inbox/pull-requests ctx role)
-  (def url (stash-url ctx (format "/api/1.0/inbox/pull-requests?role=~a" role)))
+  (def url (stash-url ctx (format "/api/1.0/inbox/pull-requests?role=~a&limit=100" role)))
   (def req (http-get url headers: (default-http-headers ctx)))
   (def body (request-json req))
   (unless (request-success? req) (error (json-object->string body)))
