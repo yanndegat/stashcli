@@ -6,6 +6,7 @@
         :std/misc/string
         :std/misc/symbol
         :std/ref
+        :std/sort
         :std/srfi/13
         :std/sugar
         :std/text/json
@@ -21,6 +22,17 @@
               (("NEEDS_WORK") "[red]\u2716[reset]")
               (else "\u2610")))
           (~ pr 'reviewers)))
+
+(def (format-build-status build)
+     (cond
+      ((equal? 0 (~ build 'size)) "none")
+      (else
+       (let (last-build (car (sort (~ build 'values)
+                                   (lambda (a b) (< (~ a 'dateAdded) (~ b 'dateAdded))))))
+         (case (~ last-build 'state)
+           (("SUCCESSFUL") "[green]\u2713[reset]")
+           (("FAILED") "[red]\u2716[reset]")
+           (else "?"))))))
 
 (def (display-attrs attrs default-colors?: (default-colors? #t))
      (for (attr (hash->list/sort attrs symbol<?))

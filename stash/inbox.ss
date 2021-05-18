@@ -5,6 +5,7 @@
         :std/format
         :std/iter
         :std/ref
+        :std/text/json
         :stash/api
         :stash/context
         :stash/utils)
@@ -14,15 +15,17 @@
 ;; display list of project repositoties
 ;; hash? string? -> any?
 (def (list-prs role)
-  (for (pr (inbox/pull-requests (context) role))
-    (display-line [["project" :: (~ pr 'toRef 'repository 'project 'key)]
-                   ["repo" :: (~ pr 'toRef 'repository 'slug)]
-                   ["id" :: (~ pr 'id)]
-                   ["ref" :: (~ pr 'toRef 'displayId)]
-                   ["state" :: (format-pr-state (~ pr 'state))]
-                   ["status" :: (format-pr-approval-status pr)]
-                   ["title" :: (~ pr 'title)]
-                   ["author" :: (if (equal? role "author") "me" (~ pr 'author 'user 'name))]])))
+     (for (pr (inbox/pull-requests (context) role))
+          (display-line [["project" :: (~ pr 'toRef 'repository 'project 'key)]
+                         ["repo" :: (~ pr 'toRef 'repository 'slug)]
+                         ["id" :: (~ pr 'id)]
+                         ["ref" :: (~ pr 'toRef 'displayId)]
+                         ["state" :: (format-pr-state (~ pr 'state))]
+                         ["status" :: (format-pr-approval-status pr)]
+                         ["build-status" :: (format-build-status
+                                             (build-status/commits (context) (~ pr 'fromRef 'latestCommit)))]
+                         ["title" :: (~ pr 'title)]
+                         ["author" :: (if (equal? role "author") "me" (~ pr 'author 'user 'name))]])))
 
 (def (maincmd opt)
   (def args (~ opt 'args))

@@ -30,13 +30,16 @@
                               pseudo-terminal: #t)))))
 
 (def (list project repo direction state)
-  (for (pr (projects/repos/pull-requests (context) project repo direction state))
-    (display-line [["id" :: (~ pr 'id)]
-                   ["ref" :: (~ pr 'toRef 'displayId)]
-                   ["state" :: (format-pr-state (~ pr 'state))]
-                   ["status" :: (format-pr-approval-status pr)]
-                   ["title" :: (~ pr 'title)]
-                   ["author" :: (~ pr 'author 'user 'name)]])))
+     (for (pr (projects/repos/pull-requests (context) project repo direction state))
+          (displayln (json-object->string pr))
+          (display-line [["id" :: (~ pr 'id)]
+                         ["ref" :: (~ pr 'toRef 'displayId)]
+                         ["state" :: (format-pr-state (~ pr 'state))]
+                         ["status" :: (format-pr-approval-status pr)]
+                         ["build-status" :: (format-build-status
+                                             (build-status/commits (context) (~ pr 'fromRef 'latestCommit)))]
+                         ["title" :: (~ pr 'title)]
+                         ["author" :: (~ pr 'author 'user 'name)]])))
 
 (def (info project repo id)
   (display-attrs (projects/repos/pull-request (context) project repo id)))

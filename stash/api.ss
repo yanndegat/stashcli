@@ -172,3 +172,10 @@
   (def body (request-json req))
   (unless (request-success? req) (error (json-object->string body)))
   body)
+
+(def (build-status/commits ctx id)
+  (def url (stash-url ctx (format "/build-status/1.0/commits/~a" id)))
+  (def req (http-get url headers: (default-http-headers ctx)))
+  (def body (request-json req))
+  (unless (request-success? req) (error (json-object->string body)))
+  body)
