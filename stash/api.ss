@@ -11,7 +11,7 @@
 (export #t)
 
 (def (stash-url ctx path)
-  (format "~a~a" (~ ctx 'url) path))
+  (format "~a/rest~a" (~ ctx 'url) path))
 
 (def (default-http-headers ctx)
   (let-hash ctx

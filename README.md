@@ -30,7 +30,7 @@ ldd stashcli/stashcli-static
 ```yaml
 ---
 token: "MDM...."
-url: "https://stash.mycomp.net/rest"
+url: "https://stash.mycomp.net"
 default-project: myproject
 ```
 
