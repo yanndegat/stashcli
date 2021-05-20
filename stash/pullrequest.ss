@@ -31,9 +31,9 @@
 
 (def (list project repo direction state)
      (for (pr (projects/repos/pull-requests (context) project repo direction state))
-          (displayln (json-object->string pr))
           (display-line [["id" :: (~ pr 'id)]
                          ["ref" :: (~ pr 'toRef 'displayId)]
+                         ["version" :: (~ pr 'version)]
                          ["state" :: (format-pr-state (~ pr 'state))]
                          ["status" :: (format-pr-approval-status pr)]
                          ["build-status" :: (format-build-status

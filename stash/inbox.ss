@@ -19,6 +19,7 @@
           (display-line [["project" :: (~ pr 'toRef 'repository 'project 'key)]
                          ["repo" :: (~ pr 'toRef 'repository 'slug)]
                          ["id" :: (~ pr 'id)]
+                         ["version" :: (~ pr 'version)]
                          ["ref" :: (~ pr 'toRef 'displayId)]
                          ["state" :: (format-pr-state (~ pr 'state))]
                          ["status" :: (format-pr-approval-status pr)]
