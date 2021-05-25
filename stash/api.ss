@@ -110,14 +110,14 @@
     body))
 
 (def (projects/repos/pull-requests/delete ctx project repo id version: (version 0))
-  (def url (stash-url ctx (format
-                           "/api/1.0/projects/~a/repos/~a/pull-requests/~a"
-                           project repo id)))
-  (def req (http-delete url
-                        headers: (json-http-headers ctx)
-                        data: (json-object->string (hash (version version)))))
-  (unless (request-success? req) (error (~ (request-json req) 'errors 0 'message)))
-  #t)
+     (def url (stash-url ctx (format
+                              "/api/1.0/projects/~a/repos/~a/pull-requests/~a"
+                              project repo id)))
+     (def req (http-delete url
+                           headers: (json-http-headers ctx)
+                           data: (json-object->string (hash (version version)))))
+     (unless (request-success? req) (error (~ (request-json req) 'errors 0 'message)))
+     #t)
 
 (def (projects/repos/pull-requests/approve ctx project repo id version: (version 0))
   (def url (stash-url ctx (format
