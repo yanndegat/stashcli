@@ -24,19 +24,22 @@
               (else "\u2610")))
           (~ pr 'reviewers)))
 
-(def (format-last-build-status build)
-     (cond
-      ((equal? 0 (~ build 'size)) "none")
-      (else
-       (let (last-build (car (sort (~ build 'values)
-                                   (lambda (a b) (< (~ a 'dateAdded) (~ b 'dateAdded))))))
-         (format-build-status (~ last-build 'state))))))
-
 (def (format-build-status state)
-     (case state
-       (("SUCCESSFUL") "[green]\u2713[reset]")
-       (("FAILED") "[red]\u2716[reset]")
-       (else "?")))
+     (cond
+      ((string? state) (case state
+                         (("SUCCESSFUL") "[green]\u2713[reset]")
+                         (("FAILED") "[red]\u2716[reset]")
+                         (else "?")))
+      ((table? state) (format-build-status
+                       (foldl (lambda (s prev)
+                                (cond
+                                 ((and (equal? "SUCCESSFUL" s)
+                                       (equal? "SUCCESSFUL" prev)) "SUCCESSFUL")
+                                 ((equal? "FAILED" s) "FAILED")
+                                 (else "?")))
+                              "SUCCESSFUL"
+                              (map (cut ~ <> 'state) (~ state 'values)))))
+      (else "??")))
 
 (def (display-attrs attrs default-colors?: (default-colors? #t))
      (for (attr (hash->list/sort attrs symbol<?))
