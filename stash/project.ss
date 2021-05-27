@@ -31,12 +31,12 @@
   (def args (~ opt 'args))
 
   (def listreposcmd
-    (command 'list-repositories help: "list repositories in a project"
+    (command 'repositories help: "list repositories in a project"
              (optional-argument 'project help: "project"
                                 default: #f)))
 
   (def listreviewerscmd
-    (command 'list-reviewers help: "list default reviewers in a project"
+    (command 'reviewers help: "list default reviewers in a project"
              (optional-argument 'project help: "project"
                                 default: #f)))
 
@@ -52,8 +52,8 @@
           (project (or (~ opt 'project) (default-project))))
      (unless project (error "no project specified."))
      (case cmd
-       ((list-repositories) (list-repositories project))
-       ((list-reviewers) (list-reviewers project))
+       ((repositories) (list-repositories project))
+       ((reviewers) (list-reviewers project))
        ((help)
         (getopt-display-help-topic gopt (~ opt 'command) "project"))))
    (catch (getopt-error? exn)

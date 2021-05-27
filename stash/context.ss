@@ -84,11 +84,10 @@
      (current-remote-branch
       (and (current-project) (current-repo) (upstream-branch)
            (let* ((branches (projects/repos/branches (context) (current-project) (current-repo)))
-                  (filtered-branches (filter (lambda (b) (or (equal? (upstream-branch) (hash-ref b 'id #f))
-                                                             (equal? (upstream-branch) (hash-ref b 'displayId #f))))
-                                             branches)))
-             (and (pair? filtered-branches)
-                  (car filtered-branches))))))
+                  (branch (find (lambda (b) (or (equal? (upstream-branch) (hash-ref b 'id #f))
+                                                (equal? (upstream-branch) (hash-ref b 'displayId #f))))
+                                branches)))
+             (and branch (~ branch 'displayId))))))
 
 (def context (make-parameter #f))
 (def (init-context path)

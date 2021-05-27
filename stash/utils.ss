@@ -10,6 +10,7 @@
         :std/srfi/13
         :std/sugar
         :std/text/json
+        :std/text/utf8
         :stash/context
         :colorstring/colorstring)
 
@@ -23,16 +24,19 @@
               (else "\u2610")))
           (~ pr 'reviewers)))
 
-(def (format-build-status build)
+(def (format-last-build-status build)
      (cond
       ((equal? 0 (~ build 'size)) "none")
       (else
        (let (last-build (car (sort (~ build 'values)
                                    (lambda (a b) (< (~ a 'dateAdded) (~ b 'dateAdded))))))
-         (case (~ last-build 'state)
-           (("SUCCESSFUL") "[green]\u2713[reset]")
-           (("FAILED") "[red]\u2716[reset]")
-           (else "?"))))))
+         (format-build-status (~ last-build 'state))))))
+
+(def (format-build-status state)
+     (case state
+       (("SUCCESSFUL") "[green]\u2713[reset]")
+       (("FAILED") "[red]\u2716[reset]")
+       (else "?")))
 
 (def (display-attrs attrs default-colors?: (default-colors? #t))
      (for (attr (hash->list/sort attrs symbol<?))
@@ -44,16 +48,15 @@
      (displayln (color (format-line line default-colors?: default-colors?))))
 
 (def (format-line line default-colors?: (default-colors? #t))
-     (string-join
-      (map (lambda (attr)
-             (cond
-              ((quiet-mode?) (format "~a" (cdr attr)))
-              (else
-               (if default-colors?
-                   (format "[bold][blue]~a[reset]: ~a" (car attr) (cdr attr))
-                   (format "~a: ~a" (car attr) (cdr attr))))))
-           line)
-      ", "))
+     (string-join (map (lambda (attr)
+                         (cond
+                          ((quiet-mode?) (format "~a" (cdr attr)))
+                          (else
+                           (if default-colors?
+                               (format "[bold][blue]~a[reset]: ~a" (car attr) (cdr attr))
+                               (format "~a: ~a" (car attr) (cdr attr))))))
+                       (filter pair? line))
+                  ", "))
 
 (def (format-pr-state s)
      (match (string-downcase s)
